@@ -69,14 +69,17 @@ section.hero.menu {
 section.hero h2 {
   margin-bottom: 10px;
 }
+
 section.grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-gap: var(--gap-spacing);
 }
-
 section.grid p {
   margin: 20px 0;
+}
+section.grid img {
+  width: 100%;
 }
 
 section.centered {
