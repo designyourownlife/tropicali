@@ -2,31 +2,51 @@
 
 
 const gulp = require('gulp');
-const sass = require('gulp-sass');
+
+// CSS
+const postcss = require('gulp-postcss');
 const cleanCSS = require('gulp-clean-css');
 const sourcemaps = require('gulp-sourcemaps');
+const concat = require('gulp-concat');
 
+// browser refresh
 const sitename = 'tropicali'; // set your siteName here
 const username = 'ms'; // set your macOS userName here
 const browserSync = require('browser-sync').create();
 
+// images
 const imagemin = require('gulp-imagemin');
 
+// github
 const ghpages = require('gh-pages');
 
-sass.compiler = require('node-sass');
 
-gulp.task('sass', () => {
-  return gulp.src('src/css/app.scss')
+gulp.task('css', () => {
+  return gulp.src([
+    'src/css/reset.css',
+    'src/css/type.css',
+    'src/css/app.css'
+  ])
     .pipe(sourcemaps.init())
-      .pipe(sass().on('error', sass.logError))
+      .pipe(
+        postcss([
+          require('autoprefixer'), 
+          require('postcss-preset-env')({
+            stage: 1, 
+            browsers: ["IE 11", "last 2 versions"]
+          })
+        ])
+      )
+      .pipe(concat('app.css'))
       .pipe(
         cleanCSS({
           compatibility: 'ie8'
         })
       )
     .pipe(sourcemaps.write())
-    .pipe(gulp.dest('dist'));
+    .pipe(gulp.dest('dist'))
+    // auto-inject into browsers
+    .pipe(browserSync.stream());
 });
 
 gulp.task('html', () => {
@@ -45,7 +65,6 @@ gulp.task('images', () => {
 
 gulp.task('watch', () => {
   browserSync.init({
-
       proxy: sitename +'.test',
      // or if site is http comment out below block and uncomment line above
      /*
@@ -63,9 +82,9 @@ gulp.task('watch', () => {
   });
 
   gulp.watch('src/*.html', gulp.series("html")).on('change',browserSync.reload);
-  gulp.watch('src/css/app.scss', gulp.series("sass")).on('change',browserSync.reload);
+  gulp.watch('src/css/*', gulp.series("css")).on('change',browserSync.reload);
   gulp.watch('src/fonts/*', gulp.series("fonts"));
-  gulp.watch('src/fonts/*', gulp.series("images"));
+  gulp.watch('src/img/*', gulp.series("images"));
 
 });
 
@@ -75,11 +94,11 @@ gulp.task("deploy", () => {
 })
 */
 // for Gulp version >= 4.0
-exports.deploy = function (cb) {
-  ghpages.publish('dist') 
-  cb();
-}
+gulp.task('deploy', done => {
+  ghpages.publish("dist")
+  done();
+});
 
-gulp.task("default", gulp.series("html", "fonts", "images", "sass", "watch"));
+gulp.task("default", gulp.series("html", "fonts", "images", "css", "watch"));
 
 
